@@ -90,12 +90,39 @@ class VAE_Encoder(nn.Sequential):
                 x = F.pad(x, (0, 1, 0, 1))
             x = module(x)
 
+        # Use torch.chunk to divive x in 2 tensors along axis 2
+        # (batch_size, 8, Heigh/8, Width/8) -> (
+        #                     (batch_size, 4, Heigh/8, Width/8),
+        #                     (batch_size, 4, Heigh/8, Width/8)
+        # )
+        mean, log_variance = torch.chunk(x, 2, dim=1)
+
+        # use clamp to maintain log_variance in a reasonable range (not too big, not to small)
+        # (batch_size, 4, Heigh/8, Width/8)
+        log_variance = torch.clamp(log_variance, -30, 20)
+
+        # get variance from log_variance (by exp)
+        # (batch_size, 4, Heigh/8, Width/8)
+        variance = log_variance.exp()
+
+        # compute standard deviation
+        # (batch_size, 4, Heigh/8, Width/8)
+        stdev = variance.sqrt()       
+
+        # To obtain a distribution X(mean, variance) starting from an other 
+        # distribution Z(0, 1) we can do X = mean + stdev * Z
+        x = mean + stdev * noise
+
+        # scale the output by a constant (not clear why, historical reason ?)
+        x *= 0.18215
+
         return x
 
 if __name__ == "__main__":
     
     x = torch.Tensor(4, 3, 1024, 1024)
+    noise =  torch.Tensor(4, 4, int(1024/8), int(1024/8))
     print(x.shape)    
     model = VAE_Encoder()
-    y = model(x, x)
+    y = model(x, noise)
     print(y.shape)
