@@ -120,8 +120,9 @@ class VAE_Encoder(nn.Sequential):
 
 if __name__ == "__main__":
     
-    x = torch.Tensor(4, 3, 1024, 1024)
-    noise =  torch.Tensor(4, 4, int(1024/8), int(1024/8))
+    h_w = 1024
+    x = torch.Tensor(4, 3, h_w, h_w)
+    noise =  torch.Tensor(4, 4, int(h_w/8), int(h_w/8))
     print(x.shape)    
     model = VAE_Encoder()
     y = model(x, noise)
