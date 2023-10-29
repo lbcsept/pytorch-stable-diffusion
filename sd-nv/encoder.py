@@ -7,12 +7,11 @@ class VAE_Encoder(nn.Sequential):
     
 
     def __init__(self, input_channels:int=3, vae_dim:int=512, latent_dim:int=8,
-                 group_norm:int=32, latent_const=0.18215):
+                 groupnorm:int=32, latent_const=0.18215):
         self.input_channels = input_channels 
         self.latent_const = latent_const
         self.vae_dim = vae_dim
         self.latent_dim = latent_dim
-        self.group_norm = group_norm
 
         super().__init__(
 
@@ -56,7 +55,7 @@ class VAE_Encoder(nn.Sequential):
             VAE_ResidualBlock(vae_dim, vae_dim),
 
             # Normalization (32 groups, vae_dim features)
-            nn.GroupNorm(group_norm, vae_dim),
+            nn.GroupNorm(groupnorm, vae_dim),
 
             # activation : SILU (could also be RELU, but pratically SILU seems better)
             nn.SiLU(),
