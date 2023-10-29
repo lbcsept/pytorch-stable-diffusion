@@ -86,3 +86,96 @@ class VAE_ResidualBlock(nn.Module):
         return x + self.residual_layer(residue)
 
 
+class VAE_Decoder(nn.Sequential):
+
+    def __init__(self, input_channels=3):
+
+        super().__init__(
+
+            # handle bottleneck output
+            # (batch_size, 4, h/8, w/8) -> same
+            nn.Conv2d(4, 4, kernel_size=1, padding=0),
+
+            # (batch_size, 4, h/8, w/8) -> (batch_size, 512, h/8, w/8)
+            nn.Conv2d(4, 512, kernel_size=3, padding=1),
+
+            # (batch_size, 512, h/8, w/8) -> same
+            VAE_ResidualBlock(512, 512),
+
+            # (batch_size, 512, h/8, w/8) -> same
+            VAE_AttentionBlock(512),
+
+            # 4X (batch_size, 512, h/8, w/8) -> same
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+
+            # (batch_size, 512, h/8, w/8) -> (batch_size, 512, h/4, w/4)
+            nn.Upsample(scale_factor=2),
+
+            # (batch_size, 512, h/4, w/4) -> same
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+
+            # 3 X (batch_size, 512, h/4, w/4) -> same
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+
+            # (batch_size, 512, h/4, w/4) -> (batch_size, 512, h/2, w/2)
+            nn.Upsample(scale_factor=2),
+
+            # (batch_size, 512, h/2, w/2) -> same
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+
+            # (batch_size, 512, h/2, w/2) -> (batch_size, 256, h/2, w/2) 
+            VAE_ResidualBlock(512, 256),
+
+            # 2X (batch_size, 256, h/2, w/2) -> same
+            VAE_ResidualBlock(256, 256),
+            VAE_ResidualBlock(256, 256),
+
+            # (batch_size, 256, h/2, w/2) -> (batch_size, 256, h, w)
+            nn.Upsample(scale_factor=2),
+
+            # (batch_size, 256, h, w) -> same
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+
+            # (batch_size, 256, h, w) -> (batch_size, 128, h, w) 
+            VAE_ResidualBlock(256, 128),
+
+            # 2X (batch_size, 128, h, w) -> same
+            VAE_ResidualBlock(128, 128),
+            VAE_ResidualBlock(128, 128),
+ 
+            nn.GroupNorm(32, 128),
+
+            nn.SiLU(),
+
+            # (batch_size, 128, h, w) -> Input samples shape :(batch_size, 3, h, w)
+            nn.Conv2d(128, input_channels, kernel_size=3, padding=1),
+
+        )
+
+
+    def forward(self, x:torch.Tensor) -> torch.Tensor:
+        #x: (Batch_size, 4, h/8, w/8)
+
+        x /= 0.18215
+
+        for module in self:
+            x = module(x)
+
+        #x: (Batch_size, input_channels, h, w)
+        return(x)
+    
+
+if __name__ == "__main__":
+    
+    h_w = 512
+    # x = torch.Tensor(4, 3, h_w, h_w)
+    latent =  torch.Tensor(4, 4, int(h_w/8), int(h_w/8))
+    print(latent.shape)    
+    model = VAE_Decoder()
+    y = model(latent)
+    print(y.shape)
