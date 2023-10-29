@@ -11,11 +11,11 @@ class SelfAttention(nn.Module):
     """
     def __init__(self, n_heads: int, d_embed: int, in_proj_bias=True, out_proj_bias=True):
         super().__init__()
-
+        # This combines the Wq, Wk and Wv matrices into one matrix
         self.in_proj = nn.Linear(d_embed, 3 * d_embed, bias=in_proj_bias) # *3 for k, q, v
+        # This one represents the Wo matrix
         self.out_proj = nn.Linear(d_embed,  d_embed, bias=out_proj_bias)
         self.n_heads = n_heads
-
         self.d_head = d_embed // n_heads # dimension of 1 head = tot size embedding / n_heads
 
 
@@ -56,7 +56,7 @@ class SelfAttention(nn.Module):
 
         weight /= math.sqrt(self.d_head)
 
-        weigth = F.softmax(weight, dim=-1)
+        weight = F.softmax(weight, dim=-1)
 
         # (batch_size, H, Seq_len, Seq_len) @ (Batch_size, H, seq_len, Dim/H)
         # -> (Batch_size, H, seq_len, Dim/H)
