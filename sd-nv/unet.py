@@ -76,7 +76,7 @@ class UNET(nn.Module):
             SwitchSequential(UNET_ResidualBlock(8 * u_dim, 4 * u_dim)),
 
             SwitchSequential(UNET_ResidualBlock(8 * u_dim, 4 * u_dim), 
-                             UpSample(4 * u_dim)),
+                             Upsample(4 * u_dim)),
 
             SwitchSequential(UNET_ResidualBlock(8 * u_dim, 4 * u_dim), 
                              UNET_AttentionBlock(n_head, 4 * n_emdb)),
@@ -86,7 +86,7 @@ class UNET(nn.Module):
 
             SwitchSequential(UNET_ResidualBlock(6 * u_dim, 4 * u_dim), 
                              UNET_AttentionBlock(n_head, 4 * n_emdb),
-                             UpSample(4 * u_dim)),
+                             Upsample(4 * u_dim)),
 
             
             SwitchSequential(UNET_ResidualBlock(6 * u_dim, 2 * u_dim), 
@@ -97,7 +97,7 @@ class UNET(nn.Module):
 
             SwitchSequential(UNET_ResidualBlock(3 * u_dim, 2 * u_dim), 
                              UNET_AttentionBlock(n_head, 2 * n_emdb),
-                             UpSample(2 * u_dim)),
+                             Upsample(2 * u_dim)),
 
             SwitchSequential(UNET_ResidualBlock(3 * u_dim, u_dim), 
                              UNET_AttentionBlock(n_head, n_emdb)),
@@ -110,5 +110,17 @@ class UNET(nn.Module):
 
         ])
 
+
+class Upsample(nn.Module):
+
+    def __init__(self, channels: int):
+        super().__init__()
+        self.conv = nn.conv2d(channels, channels, kernel_size=3, padding=1)
+
+    def forward(self, x):
+        # (batch_size, features, h, w) -> # (batch_size, features, 2 * h, 2 * w) 
+        x = F.interpolate(x, scale_factor=2, mode="nearest")
+
+        return self.conf(x)
 
 #UNET_OutputLayer
