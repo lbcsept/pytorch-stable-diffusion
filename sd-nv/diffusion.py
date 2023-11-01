@@ -34,11 +34,12 @@ class TimeEmbedding(nn.Module):
 
 class Diffusion(nn.Module):
 
-    def __init__(self, time_dim=320):
+    def __init__(self, time_dim=320, latent_dim: int=8):
 
         self.time_embedding = TimeEmbedding(time_dim)
+        self.latent_dim = latent_dim
         self.unet = UNET()
-        self.final = UNET_OutputLayer(time_dim, 4)
+        self.final = UNET_OutputLayer(time_dim, int(latent_dim/2))
 
 
     def forward(self, latent:torch.Tensor, context: torch.Tensor,

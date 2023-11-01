@@ -48,7 +48,6 @@ class VAE_AttentionBlock(nn.Module):
 
 
 
-
 class VAE_ResidualBlock(nn.Module):
 
     def __init__(self, in_channels:int, out_channels:int, groupnorm:int=32):
