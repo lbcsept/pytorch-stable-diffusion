@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from decoder import SelfAttention
+from attention import SelfAttention, CrossAttention
 
 class SwitchSequential(nn.Sequential):
 

@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from attention import SelfAttention, CrossAttention
 from unet import UNET, UNET_OutputLayer
 
 
@@ -60,3 +59,18 @@ class Diffusion(nn.Module):
         
         # (batch_size, 4, h/8, w/8)
         return output
+    
+
+if __name__ == "__main__":
+
+    bs = 4 # batch size
+    w, h= 512, 512
+    lat_dim = int(8/2)
+
+    
+    latents = torch.Tensor(bs, lat_dim, w, h)
+    context = torch.Tensor(bs, lat_dim, )
+
+    model = Diffusion()
+
+    model(latents, )
