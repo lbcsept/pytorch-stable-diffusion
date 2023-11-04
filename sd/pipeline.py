@@ -8,6 +8,7 @@ HEIGHT = 512
 LATENTS_WIDTH = WIDTH // 8
 LATENTS_HEIGHT = HEIGHT // 8
 
+
 def generate(
     prompt,
     uncond_prompt=None,
@@ -41,14 +42,16 @@ def generate(
 
         clip = models["clip"]
         clip.to(device)
-        
+
         if do_cfg:
             # Convert into a list of length Seq_Len=77
             cond_tokens = tokenizer.batch_encode_plus(
                 [prompt], padding="max_length", max_length=77
             ).input_ids
             # (Batch_Size, Seq_Len)
-            cond_tokens = torch.tensor(cond_tokens, dtype=torch.long, device=device)
+            cond_tokens = torch.tensor(
+                cond_tokens, dtype=torch.long, device=device
+            )
             # (Batch_Size, Seq_Len) -> (Batch_Size, Seq_Len, Dim)
             cond_context = clip(cond_tokens)
             # Convert into a list of length Seq_Len=77
@@ -56,7 +59,9 @@ def generate(
                 [uncond_prompt], padding="max_length", max_length=77
             ).input_ids
             # (Batch_Size, Seq_Len)
-            uncond_tokens = torch.tensor(uncond_tokens, dtype=torch.long, device=device)
+            uncond_tokens = torch.tensor(
+                uncond_tokens, dtype=torch.long, device=device
+            )
             # (Batch_Size, Seq_Len) -> (Batch_Size, Seq_Len, Dim)
             uncond_context = clip(uncond_tokens)
             # (Batch_Size, Seq_Len, Dim) + (Batch_Size, Seq_Len, Dim) -> (2 * Batch_Size, Seq_Len, Dim)
@@ -88,7 +93,9 @@ def generate(
             # (Height, Width, Channel)
             input_image_tensor = np.array(input_image_tensor)
             # (Height, Width, Channel) -> (Height, Width, Channel)
-            input_image_tensor = torch.tensor(input_image_tensor, dtype=torch.float32)
+            input_image_tensor = torch.tensor(
+                input_image_tensor, dtype=torch.float32
+            )
             # (Height, Width, Channel) -> (Height, Width, Channel)
             input_image_tensor = rescale(input_image_tensor, (0, 255), (-1, 1))
             # (Height, Width, Channel) -> (Batch_Size, Height, Width, Channel)
@@ -97,7 +104,9 @@ def generate(
             input_image_tensor = input_image_tensor.permute(0, 3, 1, 2)
 
             # (Batch_Size, 4, Latents_Height, Latents_Width)
-            encoder_noise = torch.randn(latents_shape, generator=generator, device=device)
+            encoder_noise = torch.randn(
+                latents_shape, generator=generator, device=device
+            )
             # (Batch_Size, 4, Latents_Height, Latents_Width)
             latents = encoder(input_image_tensor, encoder_noise)
 
@@ -109,7 +118,9 @@ def generate(
             to_idle(encoder)
         else:
             # (Batch_Size, 4, Latents_Height, Latents_Width)
-            latents = torch.randn(latents_shape, generator=generator, device=device)
+            latents = torch.randn(
+                latents_shape, generator=generator, device=device
+            )
 
         diffusion = models["diffusion"]
         diffusion.to(device)
@@ -132,7 +143,9 @@ def generate(
 
             if do_cfg:
                 output_cond, output_uncond = model_output.chunk(2)
-                model_output = cfg_scale * (output_cond - output_uncond) + output_uncond
+                model_output = (
+                    cfg_scale * (output_cond - output_uncond) + output_uncond
+                )
 
             # (Batch_Size, 4, Latents_Height, Latents_Width) -> (Batch_Size, 4, Latents_Height, Latents_Width)
             latents = sampler.step(timestep, latents, model_output)
@@ -150,7 +163,8 @@ def generate(
         images = images.permute(0, 2, 3, 1)
         images = images.to("cpu", torch.uint8).numpy()
         return images[0]
-    
+
+
 def rescale(x, old_range, new_range, clamp=False):
     old_min, old_max = old_range
     new_min, new_max = new_range
@@ -161,9 +175,12 @@ def rescale(x, old_range, new_range, clamp=False):
         x = x.clamp(new_min, new_max)
     return x
 
+
 def get_time_embedding(timestep):
     # Shape: (160,)
-    freqs = torch.pow(10000, -torch.arange(start=0, end=160, dtype=torch.float32) / 160) 
+    freqs = torch.pow(
+        10000, -torch.arange(start=0, end=160, dtype=torch.float32) / 160
+    )
     # Shape: (1, 160)
     x = torch.tensor([timestep], dtype=torch.float32)[:, None] * freqs[None]
     # Shape: (1, 160 * 2)
