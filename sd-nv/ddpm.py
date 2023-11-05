@@ -62,7 +62,7 @@ class DDPMSampler:
         )
         self.timesteps = torch.from_numpy(timesteps)
 
-    def __get_previous_timestep(self, timestep: int) -> int:
+    def _get_previous_timestep(self, timestep: int) -> int:
         """return the previous time step of provided timestep
         given self.num_inference_steps and self.num_inferencen_steps
         Ex : if timestep = 960, self.num_inference_steps=1000 and self.num_inferencen_steps=50
@@ -78,7 +78,7 @@ class DDPMSampler:
         return prev_t
 
     def _get_variance(self, timestep: int) -> torch.Tensor:
-        prev_t = self.__get_previous_timestep(timestep)
+        prev_t = self._get_previous_timestep(timestep)
         alpha_prod_t = self.alpha_cumprod[timestep]
         alpha_prod_t_prev = self.alpha_cumprod[prev_t] if prev_t >= 0 else self.one
         current_beta_t = 1 - alpha_prod_t / alpha_prod_t_prev
