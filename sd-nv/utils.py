@@ -1,9 +1,7 @@
 import torch
 
 
-def rescale(
-    x: torch.tensor, old_range: tuple, new_range: tuple, clamp: bool = False
-):
+def rescale(x: torch.tensor, old_range: tuple, new_range: tuple, clamp: bool = False):
     """Will put input image pixels values between suited ranges (-1, 1) or opposite transformation (0, 255)
 
     Args:
@@ -15,7 +13,7 @@ def rescale(
     old_min, old_max = old_range
     new_min, new_max = new_range
     x -= old_min
-    x *= (new_max - new_min) / (old_max, old_min)
+    x *= (new_max - new_min) / (old_max - old_min)
     x += new_min
     if clamp:
         x = x.clamp(new_min, new_max)
